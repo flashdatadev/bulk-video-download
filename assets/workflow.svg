@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="240" viewBox="0 0 1000 240" role="img" aria-labelledby="title desc">
+  <title id="title">Bulk video download workflow</title>
+  <desc id="desc">Validate video IDs, submit managed delivery to your cloud bucket, and collect a complete inventory with selective retries.</desc>
+  <rect width="1000" height="240" rx="14" fill="#f5f8f2"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="28" y="34" font-size="12" letter-spacing="2" fill="#50714d">FLASHDATA · BULK VIDEO DOWNLOAD</text>
+    <g fill="#fff" stroke="#d9e2d4"><rect x="28" y="57" width="280" height="155" rx="10"/><rect x="360" y="57" width="280" height="155" rx="10"/><rect x="692" y="57" width="280" height="155" rx="10"/></g>
+    <g fill="#203b27" font-size="19" font-weight="700"><text x="48" y="90">1. Your video IDs</text><text x="380" y="90">2. Cloud delivery</text><text x="712" y="90">3. Your inventory</text></g>
+    <g fill="#506252" font-size="15"><text x="48" y="122">Validate · remove duplicates</text><text x="48" y="151">One ID per line</text><text x="48" y="183">Python SDK + CLI</text><text x="380" y="122">YouTube → your bucket</text><text x="380" y="151">MP4 · MP3 · metadata</text><text x="380" y="183">Save job ID · track progress</text><text x="712" y="122">JSONL + delivery CSV</text><text x="712" y="151">Completed + failed IDs</text><text x="712" y="183">Retry a failed subset</text></g>
+    <g fill="#50714d" font-size="26"><text x="322" y="143">→</text><text x="654" y="143">→</text></g>
+  </g>
+</svg>

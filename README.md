@@ -4,20 +4,35 @@
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
 [![MIT license](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-**Bulk download YouTube videos from a text file to your cloud storage. Save the job, follow its progress, and export a delivery inventory with failed IDs for selective retries.**
+**Bulk download YouTube videos from URL lists, CSV files or video IDs to your cloud storage. Save the job, follow its progress, and export a delivery inventory with failed IDs for selective retries.**
 
 A Python toolkit for batch MP4 downloads, MP3 audio collections and video datasets, built on the [official FlashData SDK](https://github.com/flashdatadev/flashdata-python). FlashData handles YouTube extraction, bot challenges, proxy routing, retries and media delivery. Your machine prepares the collection and tracks the results.
 
 ![Bulk video download workflow: video IDs to managed cloud delivery to a complete inventory](assets/workflow.svg)
 
-[Quickstart](#quickstart-bulk-download-youtube-videos) · [Offline demo](#try-the-workflow-without-an-api-key) · [CLI](#command-line-workflow) · [Recovery](docs/recovery.md) · [Video datasets](docs/video-datasets.md) · [Storage setup](docs/storage.md)
+[Quickstart](#quickstart-bulk-download-youtube-videos) · [Real batch demo](#try-a-real-three-video-batch) · [URL imports](docs/url-imports.md) · [CLI](#command-line-workflow) · [Recovery](docs/recovery.md) · [Video datasets](docs/video-datasets.md) · [Storage setup](docs/storage.md)
+
+## Try a real three-video batch
+
+**One saved job → three 10-second MP4 clips → your bucket + a delivery CSV.** Install the toolkit below, then run:
+
+```bash
+flashdata-bulk init
+# Edit config.py with your FlashData API key and storage settings.
+flashdata-bulk live-demo
+```
+
+The live demo requests clips from three real YouTube videos at up to 360p, prints live progress, and saves the actual outcomes in `runs/live-demo/results/`. Open `deliveries.csv` to find the MP4s in your bucket. Run the command again to collect the same job. It uses API credits and is separate from the offline simulation.
+
+[Demo inputs and walkthrough](docs/live-demo.md) · [Python demo with the key directly in code](examples/live_batch_demo.py)
 
 ## What this bulk downloader does
 
 | Your task | What you get |
 | --- | --- |
 | Download multiple videos from a text file | One bulk job with shared format, quality and storage settings |
-| Clean a large collection | ID validation, deduplication and a normalized input file; SQLite keeps the ID index off the Python heap |
+| Import links from a spreadsheet or text file | Watch, shortened, Shorts, live and embed URLs become an ID-only file; duplicates are removed |
+| Clean a large collection | Validation and disk-backed deduplication; SQLite keeps the ID index off the Python heap |
 | Continue after a terminal disconnect | An accepted job ID saved before upload; collect the same job after restarting |
 | Find completed media | JSONL results, a CSV of delivered files, completed IDs and a summary |
 | Retry only failed downloads | A separate `failed-ids.txt`, published only after every input has a result |
@@ -32,24 +47,30 @@ Requires **Python 3.10+**, a [FlashData API key](https://flashdata.dev/signup?ut
 ### 1. Install
 
 ```bash
-git clone https://github.com/flashdatadev/bulk-video-download.git
-cd bulk-video-download
-python -m pip install -e .
+python -m pip install https://github.com/flashdatadev/bulk-video-download/releases/download/v0.2.0/flashdata_bulk_video_download-0.2.0-py3-none-any.whl
 ```
 
-A virtual environment is recommended: `python -m venv .venv`, then `source .venv/bin/activate` on Linux/macOS or `.\.venv\Scripts\Activate.ps1` on Windows before installing.
+This versioned wheel installs the CLI, Python library and FlashData SDK. **No Git clone needed.** [Release and checksums](https://github.com/flashdatadev/bulk-video-download/releases/tag/v0.2.0)
 
-### 2. Prepare a video ID file
+If your Python installation requires a virtual environment, run `python -m venv .venv` and `source .venv/bin/activate` on Linux/macOS, or `.\.venv\Scripts\Activate.ps1` on Windows, before installing.
 
-Create `video-ids.txt`, one **11-character video ID** per line:
+### 2. Import your video links
+
+Create `video-urls.txt`, one video URL or ID per line:
 
 ```text
-jNQXAC9IVRw
-dQw4w9WgXcQ
-9bZkp7q19f0
+https://www.youtube.com/watch?v=jNQXAC9IVRw
+https://youtu.be/aqz-KE-bpKQ
+M7lc1UVf-VE
 ```
 
-Use IDs, not full URLs, `youtu.be` links, channel URLs, playlists, CSV headers or JSON. For `https://www.youtube.com/watch?v=jNQXAC9IVRw`, the ID is `jNQXAC9IVRw`. Blank lines and duplicates are removed automatically; an invalid line stops submission and reports its line number.
+```bash
+flashdata-bulk import video-urls.txt video-ids.txt
+```
+
+This local step extracts IDs and removes duplicates before any API request. Shorts, live and embed URLs work too. For a spreadsheet export, use `flashdata-bulk import videos.csv video-ids.txt --column url`. [URL and CSV import details](docs/url-imports.md)
+
+Already have an ID file? Skip the import. The API input is one **11-character ID** per line; `start` still rejects raw URLs. Playlist and channel URLs need to be resolved to individual videos first.
 
 ### 3. Run your collection in Python
 
@@ -122,7 +143,7 @@ See [result fields and retry behavior](docs/results.md). Private bucket objects 
 
 ## Command-line workflow
 
-For CLI use, copy **[config.example.py](config.example.py)** to `config.py` and set `API_KEY` and `STORAGE` there. This is a settings-only configuration, separate from the quickstart script above.
+For CLI use, run `flashdata-bulk init` and set `API_KEY` and `STORAGE` in the generated `config.py`. It uses placeholder keys directly in Python and never overwrites existing settings. This is separate from the Python script above. [Configuration example](config.example.py)
 
 ```bash
 # Validate and deduplicate locally; no credentials needed
@@ -215,6 +236,8 @@ Yes. Python 3.10+ on Linux, macOS or Windows; no desktop session is required. CI
 ## Development
 
 ```bash
+git clone https://github.com/flashdatadev/bulk-video-download.git
+cd bulk-video-download
 python -m pip install -e ".[dev]"
 python -m pytest
 python -m ruff check .

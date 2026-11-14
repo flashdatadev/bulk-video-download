@@ -12,7 +12,7 @@ from pathlib import Path
 from flashdata import FlashData
 from flashdata.errors import FlashDataError
 
-from .inputs import prepare_ids
+from .inputs import import_urls, prepare_ids
 from .workflow import PRESETS, collect, progress_line, resume, start, status
 
 
@@ -35,12 +35,22 @@ def main(argv: list[str] | None = None) -> int:
     prepare = commands.add_parser("prepare", help="Validate/deduplicate IDs offline")
     prepare.add_argument("input", type=Path)
     prepare.add_argument("output", type=Path)
+    importer = commands.add_parser(
+        "import", help="Convert YouTube URLs/IDs or a CSV column offline"
+    )
+    importer.add_argument("input", type=Path)
+    importer.add_argument("output", type=Path)
+    importer.add_argument("--column", help="CSV header containing URLs/IDs; omit for plain text")
+    init = commands.add_parser("init", help="Create a placeholder Python configuration")
+    init.add_argument("--config", type=Path, default=Path("config.py"))
     demo = commands.add_parser("demo", help="Run a synthetic offline collection")
     demo.add_argument("--run", type=Path, default=Path("runs/demo"))
-    for name in ("run", "collect", "status", "resume"):
+    for name in ("run", "collect", "status", "resume", "live-demo"):
         command = commands.add_parser(name)
         command.add_argument("--config", type=Path, default=Path("config.py"))
-        command.add_argument("--run", type=Path, required=True)
+        command.add_argument(
+            "--run", type=Path, required=name != "live-demo", default=Path("runs/live-demo")
+        )
         if name != "status":
             command.add_argument("--timeout", type=positive, default=3600)
             command.add_argument("--poll-interval", type=positive, default=5)
@@ -49,6 +59,15 @@ def main(argv: list[str] | None = None) -> int:
             command.add_argument("--preset", choices=PRESETS, default="mp4")
     args = parser.parse_args(argv)
     try:
+        if args.command == "init":
+            from .config_template import create_config
+
+            create_config(args.config)
+            print(f"Created {args.config}. Fill in API_KEY and STORAGE; keep this file private.")
+            return 0
+        if args.command == "import":
+            print(json.dumps(import_urls(args.input, args.output, column=args.column), indent=2))
+            return 0
         if args.command == "prepare":
             print(json.dumps(prepare_ids(args.input, args.output), indent=2))
             return 0
@@ -60,7 +79,7 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if not args.config.is_file():
             raise ValueError(
-                "Copy config.example.py to config.py and fill in your Python settings."
+                "Run flashdata-bulk init, then fill in API_KEY and STORAGE in config.py."
             )
         settings = runpy.run_path(str(args.config))
         api_key = settings.get("API_KEY")
@@ -70,10 +89,31 @@ def main(argv: list[str] | None = None) -> int:
             if args.command == "status":
                 print(json.dumps(status(client, args.run), indent=2))
                 return 0
-            if args.command == "run":
+            if args.command in {"run", "live-demo"}:
                 storage = settings.get("STORAGE")
                 if not isinstance(storage, dict) or not storage:
                     raise ValueError("Set STORAGE in your private Python config before submission.")
+                if any(
+                    isinstance(value, str) and value.startswith("your-")
+                    for value in storage.values()
+                ):
+                    raise ValueError("Replace the placeholder STORAGE settings before submission.")
+            if args.command == "live-demo":
+                from .live_demo import run_live_demo
+
+                print("LIVE DEMO: 3 video IDs, 10-second MP4 clips, <=360p; uses API credits.")
+                summary = run_live_demo(
+                    client,
+                    storage,
+                    args.run,
+                    timeout=args.timeout,
+                    poll_interval=args.poll_interval,
+                    on_progress=report,
+                )
+                print(json.dumps(summary, indent=2))
+                print(f"Delivery inventory: {args.run / 'results' / 'deliveries.csv'}")
+                return 2 if summary["failed"] or summary["needs_review"] else 0
+            if args.command == "run":
                 job_id = start(
                     client,
                     args.input,

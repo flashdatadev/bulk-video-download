@@ -189,6 +189,8 @@ start(
 
 ## Bulk video downloads for datasets
 
+Need video IDs first? Use the [YouTube Search API Python toolkit](https://github.com/flashdatadev/youtube-search-api) to search multiple topics, filter videos and export a deduplicated `video-ids.txt`. Review the candidates, then pass the selected ID file to this bulk downloader.
+
 ```bash
 flashdata-bulk run video-ids.txt --preset dataset --run runs/dataset-01
 ```

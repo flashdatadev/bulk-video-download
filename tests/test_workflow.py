@@ -20,6 +20,7 @@ STORAGE = {
     "region": "us-east-1",
     "access_key": "test-access-key",
     "secret_key": "test-storage-secret",
+    "session_token": "test-storage-session-token",
 }
 
 
@@ -55,7 +56,13 @@ def test_complete_workflow_and_reread_without_duplicate_submission(setup):
     assert len(mutations(mock)) == 3  # create, upload, start
     state = (run / "run.json").read_text()
     assert job_id in state
-    for secret in ("test-api-key", "test-storage-secret", "test-access-key", "https://storage"):
+    for secret in (
+        "test-api-key",
+        "test-storage-secret",
+        "test-storage-session-token",
+        "test-access-key",
+        "https://storage",
+    ):
         assert secret not in state
 
 

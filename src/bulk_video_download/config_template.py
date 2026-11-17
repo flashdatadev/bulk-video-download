@@ -11,6 +11,8 @@ STORAGE = {
     "region": "us-east-1",
     "access_key": "your-storage-access-key",
     "secret_key": "your-storage-secret-key",
+    # With temporary keys, include the token from that same session:
+    # "session_token": "your-session-token",
     "object_prefix": "collections/run-01",
 }
 # Optional overrides for `run`; the live demo always uses its fixed small clip settings.

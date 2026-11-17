@@ -106,6 +106,8 @@ print(summary)
 
 MP4 uses video plus audio with a 1080p ceiling. Change `preset="mp4"` to `"mp3"` for audio, or `"dataset"` for best-quality video plus companion metadata. [Runnable Python example](examples/download_collection.py) · [Cloudflare R2 and other storage](docs/storage.md)
 
+Temporary credentials are supported through `storage["session_token"]` for S3, compatible STS providers, OSS, COS, BOS and TOS, using SDK 1.3 or later. See [STS configuration and expiry](docs/storage.md#temporary-credentials-sts).
+
 ## Try the workflow without an API key
 
 ```bash

@@ -23,7 +23,7 @@ not an HTTPS video URL. The prefix groups this collection's delivered objects.
 
 ```python
 STORAGE = {
-    "storage_type": "s3",
+    "storage_type": "s3_compatible",
     "storage_url": "your-r2-bucket",
     "region": "auto",
     "endpoint_url": "https://your-account-id.r2.cloudflarestorage.com",
@@ -36,6 +36,60 @@ STORAGE = {
 Use the account's S3 API endpoint, not a public R2 custom domain. The SDK/API also
 support other storage providers; see the authoritative [storage parameters](https://flashdata.dev/docs/sources/youtube_download#storage)
 for GCS, Azure, OSS, COS, BOS and TOS.
+
+## Temporary credentials (STS)
+
+SDK 1.3 or later accepts `session_token` in the storage configuration, together
+with the matching temporary `access_key` and `secret_key`. For example:
+
+```python
+from flashdata import FlashData
+from bulk_video_download import start
+
+storage = {
+    "storage_type": "s3",
+    "storage_url": "your-media-bucket",
+    "region": "us-east-1",
+    "object_prefix": "collections/sts-run-01",
+    "access_key": "your-temporary-access-key",
+    "secret_key": "your-temporary-secret-key",
+    "session_token": "your-session-token",
+}
+
+with FlashData(api_key="your-flashdata-api-key") as client:
+    job_id = start(
+        client,
+        "video-ids.txt",
+        run_dir="runs/sts-run-01",
+        storage=storage,
+        preset="mp4",
+    )
+    print(job_id)
+```
+
+The toolkit sends the complete credential set in `options.storage` when creating
+the bulk job. The CLI accepts the same `STORAGE` dictionary in its private
+`config.py`; no new flag is needed. Credentials are excluded from `run.json`.
+
+| `storage_type` | Token supplied as `session_token` |
+| --- | --- |
+| `s3` | AWS STS `SessionToken` |
+| `s3_compatible` | The provider's S3 session token, if supported |
+| `oss` | Alibaba Cloud STS `SecurityToken` |
+| `cos` | Tencent Cloud `Token`, with `TmpSecretId` / `TmpSecretKey` as the key pair |
+| `bos` | Baidu Cloud STS session token |
+| `tos` | Volcengine STS `SessionToken` |
+
+Keep the provider's usual endpoint, region and bucket fields. Omit the token for
+long-term access keys, GCS and Azure. Tokens must be nonempty strings of at most
+16,384 characters without whitespace or control characters.
+
+Choose credentials whose lifetime covers the entire collection: queueing,
+downloads, uploads and retries. FlashData and this toolkit do not refresh them
+automatically. If a credential expires, inspect the job and its per-video results.
+Once failures are confirmed, replace the complete key pair and token in your
+private configuration and submit only `results/failed-ids.txt` in a new run
+directory. Keep the original completed exports. See [recovery](recovery.md).
 
 ## Read delivered media
 

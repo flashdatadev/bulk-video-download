@@ -47,10 +47,10 @@ Requires **Python 3.10+**, a [FlashData API key](https://flashdata.dev/signup?ut
 ### 1. Install
 
 ```bash
-python -m pip install https://github.com/flashdatadev/bulk-video-download/releases/download/v0.2.0/flashdata_bulk_video_download-0.2.0-py3-none-any.whl
+python -m pip install https://github.com/flashdatadev/bulk-video-download/releases/download/v0.3.0/flashdata_bulk_video_download-0.3.0-py3-none-any.whl
 ```
 
-This versioned wheel installs the CLI, Python library and FlashData SDK. **No Git clone needed.** [Release and checksums](https://github.com/flashdatadev/bulk-video-download/releases/tag/v0.2.0)
+This versioned wheel installs the CLI, Python library and FlashData SDK. **No Git clone needed.** [Release and checksums](https://github.com/flashdatadev/bulk-video-download/releases/tag/v0.3.0)
 
 If your Python installation requires a virtual environment, run `python -m venv .venv` and `source .venv/bin/activate` on Linux/macOS, or `.\.venv\Scripts\Activate.ps1` on Windows, before installing.
 

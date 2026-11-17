@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flashdata-bulk-video-download"
-version = "0.2.0"
+version = "0.3.0"
 description = "Bulk video download with Python: YouTube ID files, cloud delivery, saved jobs and failed-only retries"
 readme = "README.md"
 requires-python = ">=3.10"
